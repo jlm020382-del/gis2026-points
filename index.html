@@ -360,7 +360,7 @@ const BONUS = [
   "Défi du Rabbi réussi (+10 pts)"
 ];
 
-let state = { team: null, category: null, points: null, bonus: new Set() };
+let state = { team: null, selections: new Map(), bonus: new Set() };
 
 // --- build UI ---
 const gridTeams = document.getElementById("grid-teams");
@@ -395,12 +395,17 @@ CATEGORIES.forEach(c => {
     btn.className = "btn-pts";
     btn.textContent = p.replace(" points", "pts");
     btn.onclick = () => {
-      state.category = c;
-      state.points = p;
-      document.querySelectorAll(".btn-pts").forEach(e => e.classList.remove("selected"));
-      document.querySelectorAll(".cat-row").forEach(e => e.classList.remove("active"));
-      btn.classList.add("selected");
-      row.classList.add("active");
+      const alreadySelected = btn.classList.contains("selected");
+      // ne désélectionne que les boutons de CETTE catégorie
+      ptsRow.querySelectorAll(".btn-pts").forEach(e => e.classList.remove("selected"));
+      if (alreadySelected) {
+        state.selections.delete(c);
+        row.classList.remove("active");
+      } else {
+        state.selections.set(c, p);
+        btn.classList.add("selected");
+        row.classList.add("active");
+      }
       updateRecap();
     };
     ptsRow.appendChild(btn);
@@ -430,11 +435,13 @@ inputDate.value = new Date().toISOString().slice(0, 10);
 function updateRecap() {
   const recap = document.getElementById("recap");
   const btn = document.getElementById("btnSubmit");
-  if (state.team && state.category && state.points) {
-    recap.innerHTML = `<b>${state.team.code} ${state.team.name}</b> — ${state.category} — <b>${state.points}</b>`;
+  const n = state.selections.size;
+  if (state.team && n > 0) {
+    const total = [...state.selections.values()].reduce((s, p) => s + parseInt(p, 10), 0);
+    recap.innerHTML = `<b>${state.team.code} ${state.team.name}</b> — ${n} catégorie${n > 1 ? "s" : ""} — <b>${total} pts</b>`;
     btn.disabled = false;
   } else {
-    recap.textContent = "Sélectionnez une équipe, une catégorie et des points.";
+    recap.textContent = "Sélectionnez une équipe et au moins une catégorie notée.";
     btn.disabled = true;
   }
 }
@@ -446,7 +453,7 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
-document.getElementById("btnSubmit").onclick = () => {
+function submitOne(category, points, bonusSet) {
   const [y, m, d] = inputDate.value.split("-");
 
   const form = document.createElement("form");
@@ -466,39 +473,53 @@ document.getElementById("btnSubmit").onclick = () => {
   addField(`entry.${ENTRY.date}_month`, parseInt(m, 10));
   addField(`entry.${ENTRY.date}_day`, parseInt(d, 10));
   addField(`entry.${ENTRY.team}`, state.team.value);
-  addField(`entry.${ENTRY.category}`, state.category);
-  addField(`entry.${ENTRY.points}`, state.points);
-  state.bonus.forEach(b => addField(`entry.${ENTRY.bonus}`, b));
+  addField(`entry.${ENTRY.category}`, category);
+  addField(`entry.${ENTRY.points}`, points);
+  bonusSet.forEach(b => addField(`entry.${ENTRY.bonus}`, b));
 
   document.body.appendChild(form);
   form.submit();
   document.body.removeChild(form);
 
-  // historique local (session)
-  const hist = document.getElementById("historique");
   const histList = document.getElementById("historique-list");
-  hist.style.display = "block";
   const li = document.createElement("li");
-  li.textContent = `${state.team.code} ${state.team.name} — ${state.category} — ${state.points}`;
+  li.textContent = `${state.team.code} ${state.team.name} — ${category} — ${points}`;
   histList.prepend(li);
+}
 
-  showToast(`Envoyé : ${state.team.code} — ${state.points}`);
+document.getElementById("btnSubmit").onclick = () => {
+  const entries = [...state.selections.entries()]; // [category, points][]
+  if (entries.length === 0) return;
 
-  // reset catégorie / points / bonus, on garde l'équipe et la date pour enchaîner vite
-  state.category = null;
-  state.points = null;
-  state.bonus.clear();
-  document.querySelectorAll(".btn-pts").forEach(e => e.classList.remove("selected"));
-  document.querySelectorAll(".cat-row").forEach(e => e.classList.remove("active"));
-  document.querySelectorAll(".chip-bonus").forEach(e => {
-    e.classList.remove("selected");
-    e.querySelector("input").checked = false;
-  });
-  updateRecap();
+  document.getElementById("historique").style.display = "block";
+
+  // le bonus (une fois par jour/équipe) est rattaché uniquement au 1er envoi pour éviter les doublons
+  let i = 0;
+  function next() {
+    if (i >= entries.length) {
+      showToast(`Envoyé : ${state.team.code} — ${entries.length} catégorie${entries.length > 1 ? "s" : ""}`);
+
+      state.selections.clear();
+      state.bonus.clear();
+      document.querySelectorAll(".btn-pts").forEach(e => e.classList.remove("selected"));
+      document.querySelectorAll(".cat-row").forEach(e => e.classList.remove("active"));
+      document.querySelectorAll(".chip-bonus").forEach(e => {
+        e.classList.remove("selected");
+        e.querySelector("input").checked = false;
+      });
+      updateRecap();
+      return;
+    }
+    const [category, points] = entries[i];
+    submitOne(category, points, i === 0 ? state.bonus : new Set());
+    i++;
+    setTimeout(next, 500); // laisse le temps à l'iframe de traiter l'envoi précédent
+  }
+  next();
 };
 
 document.getElementById("btnReset").onclick = () => {
-  state = { team: null, category: null, points: null, bonus: new Set() };
+  state = { team: null, selections: new Map(), bonus: new Set() };
   document.querySelectorAll(".btn-team, .btn-pts").forEach(e => e.classList.remove("selected"));
   document.querySelectorAll(".cat-row").forEach(e => e.classList.remove("active"));
   document.querySelectorAll(".chip-bonus").forEach(e => {
