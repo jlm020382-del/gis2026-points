@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIS 2026 - Tableau des points</title>
+<style>
+  :root {
+    --bleu: #1b6ca8;
+    --vert: #2e8b57;
+    --or: #e0c15a;
+    --sable: #b8973f;
+    --fond: #f4f6f8;
+    --carte: #ffffff;
+    --texte: #222;
+    --gris: #888;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--fond);
+    color: var(--texte);
+    padding-bottom: 100px;
+  }
+  header {
+    background: linear-gradient(135deg, var(--bleu), #114a75);
+    color: white;
+    padding: 18px 16px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header h1 { margin: 0; font-size: 1.3em; }
+  header p { margin: 4px 0 0; font-size: 0.85em; opacity: 0.9; }
+
+  main { max-width: 720px; margin: 0 auto; padding: 14px; }
+
+  section.card {
+    background: var(--carte);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  section.card h2 {
+    font-size: 1em;
+    margin: 0 0 10px;
+    color: var(--bleu);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  section.card h2 .num {
+    background: var(--bleu);
+    color: white;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75em;
+  }
+
+  input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+  }
+
+  .grid-teams {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  @media (min-width: 480px) {
+    .grid-teams { grid-template-columns: repeat(3, 1fr); }
+  }
+  .btn-team {
+    border: 2px solid #ddd;
+    background: #fafafa;
+    border-radius: 10px;
+    padding: 10px 6px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.85em;
+    line-height: 1.3;
+    transition: all 0.15s;
+  }
+  .btn-team b { display: block; font-size: 1.05em; }
+  .btn-team small { color: var(--gris); }
+  .btn-team.selected {
+    border-color: var(--bleu);
+    background: #e8f2fb;
+    color: var(--bleu);
+    font-weight: 600;
+  }
+  .btn-team.selected small { color: var(--bleu); }
+
+  /* --- bloc "attribution des points par catégorie" --- */
+  .card-categories {
+    background: #fffdf8;
+    border: 1px solid #ecdfba;
+  }
+  .card-categories h2 {
+    color: var(--sable);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 0.95em;
+  }
+  .cat-row {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee2c2;
+  }
+  .cat-row:last-child { border-bottom: none; padding-bottom: 4px; }
+  .cat-row .cat-name {
+    font-weight: 600;
+    color: #4a3f2a;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+  }
+  .cat-row.active .cat-name { color: var(--sable); }
+  .pts-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .btn-pts {
+    border: 1.5px solid #e6d9ad;
+    background: #fbf7ec;
+    border-radius: 10px;
+    padding: 12px 4px;
+    text-align: center;
+    font-size: 1em;
+    font-weight: 700;
+    color: #6b5a2e;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-pts.selected {
+    border-color: var(--sable);
+    background: var(--sable);
+    color: white;
+  }
+
+  .list-bonus { display: flex; flex-direction: column; gap: 8px; }
+  .chip-bonus {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid #ddd;
+    background: #fafafa;
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 0.9em;
+  }
+  .chip-bonus input { width: 18px; height: 18px; }
+  .chip-bonus.selected {
+    border-color: #b8860b;
+    background: #fdf6df;
+  }
+
+  .bar-submit {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    padding: 12px 16px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.12);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 30;
+  }
+  .bar-submit .recap {
+    flex: 1;
+    font-size: 0.85em;
+    color: var(--gris);
+  }
+  .bar-submit .recap b { color: var(--texte); }
+  #btnSubmit {
+    background: var(--vert);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 22px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  #btnSubmit:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+  }
+  #btnReset {
+    background: none;
+    border: 2px solid #ccc;
+    color: var(--gris);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.85em;
+    cursor: pointer;
+  }
+
+  #toast {
+    position: fixed;
+    top: 90px; left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--vert);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 50;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  #historique {
+    font-size: 0.8em;
+    color: var(--gris);
+  }
+  #historique ul { padding-left: 18px; margin: 6px 0; }
+  #historique li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏆 GIS 2026 — Tableau des points</h1>
+  <p>Saisie rapide pour le concours inter-équipes</p>
+</header>
+
+<div id="toast"></div>
+
+<main>
+
+  <section class="card">
+    <h2><span class="num">1</span> Date</h2>
+    <input type="date" id="inputDate">
+  </section>
+
+  <section class="card">
+    <h2><span class="num">2</span> Équipe</h2>
+    <div class="grid-teams" id="grid-teams"></div>
+  </section>
+
+  <section class="card card-categories">
+    <h2>Attribution des points par catégorie</h2>
+    <div id="list-categories"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">4</span> Bonus (optionnel)</h2>
+    <div class="list-bonus" id="list-bonus"></div>
+  </section>
+
+  <section class="card" id="historique" style="display:none;">
+    <h2>Envoyé cette session</h2>
+    <ul id="historique-list"></ul>
+  </section>
+
+</main>
+
+<div class="bar-submit">
+  <div class="recap" id="recap">Sélectionnez une équipe, une catégorie et des points.</div>
+  <button id="btnReset">Réinitialiser</button>
+  <button id="btnSubmit" disabled>Envoyer ✓</button>
+</div>
+
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+<script>
+const FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSdbbpjVdd6LTSY_ezvzpHEWR-Vh3aj-9kHfSONC8IbEJOrTJA/formResponse";
+
+const ENTRY = {
+  date: "1026819375",   // entry.<id>_year/_month/_day
+  team: "1239652839",
+  category: "67904521",
+  points: "762648935",
+  bonus: "668135366"
+};
+
+const TEAMS = [
+  { code: "B2",  value: "Tsarfat",         leader: "Mendel H." },
+  { code: "B3",  value: "Mexico",          leader: "Aaron" },
+  { code: "B4",  value: "Argentina",       leader: "Mendel E." },
+  { code: "B5",  value: "Brazil",          leader: "Roy" },
+  { code: "B6",  value: "Canada",          leader: "Mendel S." },
+  { code: "B7",  value: "Panama",          leader: "Chmouel" },
+  { code: "B8",  value: "Australia",       leader: "Yaïr" },
+  { code: "B9",  value: "Vietnam",         leader: "Yaki" },
+  { code: "B10", value: "Yapan",           leader: "Eliel" },
+  { code: "B11", value: "Sefarad",         leader: "Menahem" },
+  { code: "B12", value: "Artsot Habérit",  leader: "Yossi" }
+];
+
+const CATEGORIES = [
+  "Rassemblement (complet et à l'heure)",
+  "Ambiance (chants, énergie, participation)",
+  "Discipline et Écoute",
+  "12 Pssoukim",
+  "Birkat Hamazone",
+  "Esprit d'équipe / Ahavat Israël",
+  "Respect des animateurs et des camarades",
+  "Propreté et Rangement",
+  "Défi ou Mission surprise du jour",
+  "Victoire aux Grands Jeux",
+  "Bonus Exceptionnel (initiative, fair-play, etc.)"
+];
+
+const POINTS = ["5 points", "10 points", "15 points", "20 points"];
+
+const BONUS = [
+  "Équipe au complet toute la journée (+10 pts)",
+  "Aucun rappel à l'ordre (+10 pts)",
+  "Chant du jour parfaitement réalisé (+10 pts)",
+  "Aide spontanée à une autre équipe (+10 pts)",
+  "Défi du Rabbi réussi (+10 pts)"
+];
+
+let state = { team: null, category: null, points: null, bonus: new Set() };
+
+// --- build UI ---
+const gridTeams = document.getElementById("grid-teams");
+TEAMS.forEach(t => {
+  const el = document.createElement("div");
+  el.className = "btn-team";
+  el.innerHTML = `<b>${t.code} — ${t.value}</b><small>${t.leader}</small>`;
+  el.onclick = () => {
+    state.team = t;
+    document.querySelectorAll(".btn-team").forEach(e => e.classList.remove("selected"));
+    el.classList.add("selected");
+    updateRecap();
+  };
+  gridTeams.appendChild(el);
+});
+
+const listCat = document.getElementById("list-categories");
+CATEGORIES.forEach(c => {
+  const row = document.createElement("div");
+  row.className = "cat-row";
+  row.dataset.category = c;
+
+  const name = document.createElement("div");
+  name.className = "cat-name";
+  name.textContent = c;
+  row.appendChild(name);
+
+  const ptsRow = document.createElement("div");
+  ptsRow.className = "pts-row";
+  POINTS.forEach(p => {
+    const btn = document.createElement("div");
+    btn.className = "btn-pts";
+    btn.textContent = p.replace(" points", "pts");
+    btn.onclick = () => {
+      state.category = c;
+      state.points = p;
+      document.querySelectorAll(".btn-pts").forEach(e => e.classList.remove("selected"));
+      document.querySelectorAll(".cat-row").forEach(e => e.classList.remove("active"));
+      btn.classList.add("selected");
+      row.classList.add("active");
+      updateRecap();
+    };
+    ptsRow.appendChild(btn);
+  });
+  row.appendChild(ptsRow);
+
+  listCat.appendChild(row);
+});
+
+const listBonus = document.getElementById("list-bonus");
+BONUS.forEach(b => {
+  const el = document.createElement("label");
+  el.className = "chip-bonus";
+  el.innerHTML = `<input type="checkbox"> ${b}`;
+  const checkbox = el.querySelector("input");
+  checkbox.onchange = () => {
+    if (checkbox.checked) { state.bonus.add(b); el.classList.add("selected"); }
+    else { state.bonus.delete(b); el.classList.remove("selected"); }
+  };
+  listBonus.appendChild(el);
+});
+
+// default date = today
+const inputDate = document.getElementById("inputDate");
+inputDate.value = new Date().toISOString().slice(0, 10);
+
+function updateRecap() {
+  const recap = document.getElementById("recap");
+  const btn = document.getElementById("btnSubmit");
+  if (state.team && state.category && state.points) {
+    recap.innerHTML = `<b>${state.team.code} ${state.team.value}</b> — ${state.category} — <b>${state.points}</b>`;
+    btn.disabled = false;
+  } else {
+    recap.textContent = "Sélectionnez une équipe, une catégorie et des points.";
+    btn.disabled = true;
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+document.getElementById("btnSubmit").onclick = () => {
+  const [y, m, d] = inputDate.value.split("-");
+
+  const form = document.createElement("form");
+  form.action = FORM_ACTION;
+  form.method = "POST";
+  form.target = "hidden_iframe";
+
+  function addField(name, value) {
+    const inp = document.createElement("input");
+    inp.type = "hidden";
+    inp.name = name;
+    inp.value = value;
+    form.appendChild(inp);
+  }
+
+  addField(`entry.${ENTRY.date}_year`, y);
+  addField(`entry.${ENTRY.date}_month`, parseInt(m, 10));
+  addField(`entry.${ENTRY.date}_day`, parseInt(d, 10));
+  addField(`entry.${ENTRY.team}`, state.team.value);
+  addField(`entry.${ENTRY.category}`, state.category);
+  addField(`entry.${ENTRY.points}`, state.points);
+  state.bonus.forEach(b => addField(`entry.${ENTRY.bonus}`, b));
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  // historique local (session)
+  const hist = document.getElementById("historique");
+  const histList = document.getElementById("historique-list");
+  hist.style.display = "block";
+  const li = document.createElement("li");
+  li.textContent = `${state.team.code} ${state.team.value} — ${state.category} — ${state.points}`;
+  histList.prepend(li);
+
+  showToast(`Envoyé : ${state.team.code} — ${state.points}`);
+
+  // reset catégorie / points / bonus, on garde l'équipe et la date pour enchaîner vite
+  state.category = null;
+  state.points = null;
+  state.bonus.clear();
+  document.querySelectorAll(".btn-pts").forEach(e => e.classList.remove("selected"));
+  document.querySelectorAll(".cat-row").forEach(e => e.classList.remove("active"));
+  document.querySelectorAll(".chip-bonus").forEach(e => {
+    e.classList.remove("selected");
+    e.querySelector("input").checked = false;
+  });
+  updateRecap();
+};
+
+document.getElementById("btnReset").onclick = () => {
+  state = { team: null, category: null, points: null, bonus: new Set() };
+  document.querySelectorAll(".btn-team, .btn-pts").forEach(e => e.classList.remove("selected"));
+  document.querySelectorAll(".cat-row").forEach(e => e.classList.remove("active"));
+  document.querySelectorAll(".chip-bonus").forEach(e => {
+    e.classList.remove("selected");
+    e.querySelector("input").checked = false;
+  });
+  updateRecap();
+};
+
+updateRecap();
+</script>
+
+</body>
+</html>
