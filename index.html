@@ -323,17 +323,17 @@ const ENTRY = {
 };
 
 const TEAMS = [
-  { code: "B2",  value: "Tsarfat",         leader: "Mendel H." },
-  { code: "B3",  value: "Mexico",          leader: "Aaron" },
-  { code: "B4",  value: "Argentina",       leader: "Mendel E." },
-  { code: "B5",  value: "Brazil",          leader: "Roy" },
-  { code: "B6",  value: "Canada",          leader: "Mendel S." },
-  { code: "B7",  value: "Panama",          leader: "Chmouel" },
-  { code: "B8",  value: "Australia",       leader: "Yaïr" },
-  { code: "B9",  value: "Vietnam",         leader: "Yaki" },
-  { code: "B10", value: "Yapan",           leader: "Eliel" },
-  { code: "B11", value: "Sefarad",         leader: "Menahem" },
-  { code: "B12", value: "Artsot Habérit",  leader: "Yossi" }
+  { code: "B2",  value: "B2 - Tsarfat Mendel H.",        leader: "Mendel H.", name: "Tsarfat" },
+  { code: "B3",  value: "B3 - Mexico Aaron",              leader: "Aaron",     name: "Mexico" },
+  { code: "B4",  value: "B4 - Argentina Mendel E.",       leader: "Mendel E.", name: "Argentina" },
+  { code: "B5",  value: "B5 - Brazil Roy",                leader: "Roy",       name: "Brazil" },
+  { code: "B6",  value: "B6 - Canada Mendel S.",          leader: "Mendel S.", name: "Canada" },
+  { code: "B7",  value: "B7 - Panama Chmouel",            leader: "Chmouel",   name: "Panama" },
+  { code: "B8",  value: "B8 - Australia Yaïr",            leader: "Yaïr",      name: "Australia" },
+  { code: "B9",  value: "B9 - Vietnam Yaki",              leader: "Yaki",      name: "Vietnam" },
+  { code: "B10", value: "B10 - Yapan Eliel",              leader: "Eliel",     name: "Yapan" },
+  { code: "B11", value: "B11 - Sefarad Menahem",          leader: "Menahem",   name: "Sefarad" },
+  { code: "B12", value: "B12 - Artsot Habérit Yossi",     leader: "Yossi",     name: "Artsot Habérit" }
 ];
 
 const CATEGORIES = [
@@ -367,7 +367,7 @@ const gridTeams = document.getElementById("grid-teams");
 TEAMS.forEach(t => {
   const el = document.createElement("div");
   el.className = "btn-team";
-  el.innerHTML = `<b>${t.code} — ${t.value}</b><small>${t.leader}</small>`;
+  el.innerHTML = `<b>${t.code} — ${t.name}</b><small>${t.leader}</small>`;
   el.onclick = () => {
     state.team = t;
     document.querySelectorAll(".btn-team").forEach(e => e.classList.remove("selected"));
@@ -431,7 +431,7 @@ function updateRecap() {
   const recap = document.getElementById("recap");
   const btn = document.getElementById("btnSubmit");
   if (state.team && state.category && state.points) {
-    recap.innerHTML = `<b>${state.team.code} ${state.team.value}</b> — ${state.category} — <b>${state.points}</b>`;
+    recap.innerHTML = `<b>${state.team.code} ${state.team.name}</b> — ${state.category} — <b>${state.points}</b>`;
     btn.disabled = false;
   } else {
     recap.textContent = "Sélectionnez une équipe, une catégorie et des points.";
@@ -479,7 +479,7 @@ document.getElementById("btnSubmit").onclick = () => {
   const histList = document.getElementById("historique-list");
   hist.style.display = "block";
   const li = document.createElement("li");
-  li.textContent = `${state.team.code} ${state.team.value} — ${state.category} — ${state.points}`;
+  li.textContent = `${state.team.code} ${state.team.name} — ${state.category} — ${state.points}`;
   histList.prepend(li);
 
   showToast(`Envoyé : ${state.team.code} — ${state.points}`);
