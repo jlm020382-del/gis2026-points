@@ -215,6 +215,68 @@
     color: white;
   }
 
+  .classement-toggle {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+  .classement-toggle button {
+    border: 1.5px solid #cfe0ef;
+    background: #eef4fa;
+    color: var(--bleu);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 0.72em;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .classement-toggle button.active {
+    background: var(--bleu);
+    color: white;
+    border-color: var(--bleu);
+  }
+  .classement-team-header {
+    font-weight: 700;
+    color: var(--bleu);
+    margin: 14px 0 6px;
+    font-size: 0.92em;
+  }
+  .classement-team-header:first-child { margin-top: 0; }
+  .classement-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 2px;
+    border-bottom: 1px solid #eee;
+  }
+  .classement-row:last-child { border-bottom: none; }
+  .classement-rank {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #eee;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8em;
+    flex-shrink: 0;
+  }
+  .classement-rank.top1 { background: var(--or); color: #5c4300; }
+  .classement-rank.top2 { background: #cfd4d8; color: #333; }
+  .classement-rank.top3 { background: #cd8a52; color: #3a2210; }
+  .classement-name { flex: 1; min-width: 0; }
+  .classement-name .n { font-weight: 600; font-size: 0.92em; }
+  .classement-name .t { font-size: 0.75em; color: var(--gris); }
+  .classement-pts {
+    font-size: 0.82em;
+    font-weight: 700;
+    color: var(--bleu);
+    white-space: nowrap;
+    text-align: right;
+  }
+
   .bar-submit {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -329,6 +391,17 @@
   <section class="card card-points card-disabled" id="card-points">
     <h2><span class="num">4</span> Points</h2>
     <div class="pts-row" id="list-points"></div>
+  </section>
+
+  <section class="card" id="card-classement">
+    <h2>
+      <span class="num">5</span> Classement
+      <div class="classement-toggle">
+        <button class="active" data-mode="general">Général</button>
+        <button data-mode="team">Par équipe</button>
+      </div>
+    </h2>
+    <div id="classement-content"></div>
   </section>
 
   <section class="card" id="historique" style="display:none;">
@@ -489,6 +562,7 @@ function loadChildScores() {
         if (name) childScores[String(name).trim()] = val;
       });
       if (state.team) buildEnfants(state.team);
+      renderClassement();
     } catch (e) {}
     finish();
   };
@@ -502,6 +576,75 @@ function loadChildScores() {
 
 loadChildScores();
 setInterval(loadChildScores, 60000);
+
+// --- classement (général ou par équipe) ---
+let classementMode = "general";
+
+function buildClassementRow(rank, entry, hideTeam) {
+  const row = document.createElement("div");
+  row.className = "classement-row";
+
+  const rankEl = document.createElement("div");
+  rankEl.className = "classement-rank" + (rank === 1 ? " top1" : rank === 2 ? " top2" : rank === 3 ? " top3" : "");
+  rankEl.textContent = rank;
+  row.appendChild(rankEl);
+
+  const nameEl = document.createElement("div");
+  nameEl.className = "classement-name";
+  const n = document.createElement("div");
+  n.className = "n";
+  n.textContent = entry.name;
+  nameEl.appendChild(n);
+  if (!hideTeam) {
+    const t = document.createElement("div");
+    t.className = "t";
+    t.textContent = `${entry.team.code} — ${entry.team.name}`;
+    nameEl.appendChild(t);
+  }
+  row.appendChild(nameEl);
+
+  const ptsEl = document.createElement("div");
+  ptsEl.className = "classement-pts";
+  const rk = getRank(entry.points);
+  ptsEl.textContent = rk ? `${rk.icon} ${entry.points} pts` : `${entry.points} pts`;
+  row.appendChild(ptsEl);
+
+  return row;
+}
+
+function renderClassement() {
+  const container = document.getElementById("classement-content");
+  container.innerHTML = "";
+
+  if (classementMode === "general") {
+    const all = [];
+    TEAMS.forEach(t => t.children.forEach(c => all.push({ name: c, team: t, points: childScores[c] || 0 })));
+    all.sort((a, b) => b.points - a.points);
+    all.forEach((entry, i) => container.appendChild(buildClassementRow(i + 1, entry)));
+  } else {
+    TEAMS.forEach(t => {
+      const header = document.createElement("div");
+      header.className = "classement-team-header";
+      header.textContent = `${t.code} — ${t.name}`;
+      container.appendChild(header);
+      const list = t.children
+        .map(c => ({ name: c, team: t, points: childScores[c] || 0 }))
+        .sort((a, b) => b.points - a.points);
+      list.forEach((entry, i) => container.appendChild(buildClassementRow(i + 1, entry, true)));
+    });
+  }
+}
+
+document.querySelectorAll(".classement-toggle button").forEach(btn => {
+  btn.onclick = () => {
+    classementMode = btn.dataset.mode;
+    document.querySelectorAll(".classement-toggle button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderClassement();
+  };
+});
+
+renderClassement();
 
 const listPoints = document.getElementById("list-points");
 POINTS.forEach(p => {
