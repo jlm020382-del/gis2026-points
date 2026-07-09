@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>GIS 2026 - Concours Tsivot Hachem</title>
+<style>
+  :root {
+    --bleu: #1b6ca8;
+    --vert: #2e8b57;
+    --or: #e0c15a;
+    --sable: #b8973f;
+    --fond: #f4f6f8;
+    --carte: #ffffff;
+    --texte: #222;
+    --gris: #888;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
+  .banniere {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--fond);
+    color: var(--texte);
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+    overscroll-behavior-y: contain;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  input[type="date"] { user-select: auto; -webkit-user-select: auto; }
+  header {
+    background: linear-gradient(135deg, var(--bleu), #114a75);
+    color: white;
+    padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header h1 { margin: 0; font-size: 1.15em; }
+  header p { margin: 4px 0 0; font-size: 0.8em; opacity: 0.9; }
+
+  main { max-width: 720px; margin: 0 auto; padding: 14px; }
+
+  section.card {
+    background: var(--carte);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  section.card h2 {
+    font-size: 1em;
+    margin: 0 0 10px;
+    color: var(--bleu);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  section.card h2 .num {
+    background: var(--bleu);
+    color: white;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75em;
+  }
+
+  input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+  }
+
+  .grid-teams {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  @media (min-width: 480px) {
+    .grid-teams { grid-template-columns: repeat(3, 1fr); }
+  }
+  .btn-team {
+    position: relative;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 10px 6px;
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.85em;
+    line-height: 1.3;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.08s, border-color 0.15s;
+  }
+  .btn-team::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.8);
+  }
+  .btn-team b, .btn-team small { position: relative; z-index: 1; }
+  .btn-team:active { transform: scale(0.95); }
+  .btn-team b { display: block; font-size: 1.05em; }
+  .btn-team small { color: #555; }
+  .btn-team.selected {
+    border-color: var(--bleu);
+    color: var(--bleu);
+    font-weight: 600;
+  }
+  .btn-team.selected::before { background: rgba(232,242,251,0.85); }
+  .btn-team.selected small { color: var(--bleu); }
+
+  .card-enfant, .card-points { transition: opacity 0.15s; }
+  .card-disabled { opacity: 0.4; pointer-events: none; }
+
+  .list-enfants {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .chip-enfant {
+    border: 2px solid #ddd;
+    background: #fafafa;
+    border-radius: 10px;
+    padding: 10px 8px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    font-size: 0.9em;
+    line-height: 1.25;
+    transition: transform 0.08s, background 0.15s, border-color 0.15s;
+  }
+  .chip-enfant:active { transform: scale(0.96); }
+  .chip-enfant.selected {
+    border-color: var(--bleu);
+    background: #eef4fa;
+    color: var(--bleu);
+    font-weight: 600;
+  }
+
+  .card-points {
+    background: #fffdf8;
+    border: 1px solid #ecdfba;
+  }
+  .card-points h2 {
+    color: var(--sable);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 0.95em;
+  }
+  .pts-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .btn-pts {
+    border: 1.5px solid #e6d9ad;
+    background: #fbf7ec;
+    border-radius: 10px;
+    padding: 14px 4px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #6b5a2e;
+    cursor: pointer;
+    transition: transform 0.08s, background 0.15s, border-color 0.15s;
+  }
+  .btn-pts:active { transform: scale(0.93); }
+  .btn-pts.selected {
+    border-color: var(--sable);
+    background: var(--sable);
+    color: white;
+  }
+
+  .bar-submit {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.12);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 30;
+  }
+  .bar-submit .recap {
+    flex: 1;
+    font-size: 0.8em;
+    color: var(--gris);
+    line-height: 1.3;
+  }
+  .bar-submit .recap b { color: var(--texte); }
+  #btnSubmit {
+    background: var(--vert);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    min-height: 48px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.08s;
+    flex-shrink: 0;
+  }
+  #btnSubmit:active:not(:disabled) { transform: scale(0.95); }
+  #btnSubmit:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+  }
+  #btnReset {
+    background: none;
+    border: 2px solid #ccc;
+    color: var(--gris);
+    border-radius: 10px;
+    padding: 8px 10px;
+    min-height: 48px;
+    font-size: 0.8em;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.08s;
+  }
+  #btnReset:active { transform: scale(0.95); }
+
+  #toast {
+    position: fixed;
+    top: 90px; left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--vert);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 50;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  #historique {
+    font-size: 0.8em;
+    color: var(--gris);
+  }
+  #historique ul { padding-left: 18px; margin: 6px 0; }
+  #historique li { margin-bottom: 4px; }
+
+  @media (max-width: 400px) {
+    main { padding: 10px; }
+    section.card { padding: 12px; margin-bottom: 10px; }
+    .grid-teams, .pts-row, .list-enfants { gap: 6px; }
+    .btn-team { font-size: 0.8em; padding: 8px 4px; }
+    .chip-enfant { font-size: 0.82em; padding: 8px 4px; }
+    .btn-pts { font-size: 0.95em; padding: 12px 2px; }
+  }
+</style>
+</head>
+<body>
+
+<img src="banniere-tsivot-hachem.png" alt="Concours de Tsivot Hachem - Gan Israël Sinaï" class="banniere">
+
+<header>
+  <h1>🏆 GIS 2026 — Concours Tsivot Hachem</h1>
+  <p>Saisie rapide des points par enfant</p>
+</header>
+
+<div id="toast"></div>
+
+<main>
+
+  <section class="card">
+    <h2><span class="num">1</span> Date</h2>
+    <input type="date" id="inputDate">
+  </section>
+
+  <section class="card">
+    <h2><span class="num">2</span> Équipe</h2>
+    <div class="grid-teams" id="grid-teams"></div>
+  </section>
+
+  <section class="card card-enfant card-disabled" id="card-enfant">
+    <h2><span class="num">3</span> Enfant</h2>
+    <div class="list-enfants" id="list-enfants"></div>
+  </section>
+
+  <section class="card card-points card-disabled" id="card-points">
+    <h2><span class="num">4</span> Points</h2>
+    <div class="pts-row" id="list-points"></div>
+  </section>
+
+  <section class="card" id="historique" style="display:none;">
+    <h2>Envoyé cette session</h2>
+    <ul id="historique-list"></ul>
+  </section>
+
+</main>
+
+<div class="bar-submit">
+  <div class="recap" id="recap">Sélectionnez une équipe, un enfant et des points.</div>
+  <button id="btnReset">Réinitialiser</button>
+  <button id="btnSubmit" disabled>Envoyer ✓</button>
+</div>
+
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+<script>
+// TODO: remplacer par l'URL et les entry ID du Google Form dédié à Tsivot Hachem
+const FORM_ACTION = "REPLACE_ME_FORM_ACTION_URL";
+
+const ENTRY = {
+  date: "REPLACE_ME",   // entry.<id>_year/_month/_day
+  team: "REPLACE_ME",
+  child: "REPLACE_ME",
+  points: "REPLACE_ME"
+};
+
+const TEAMS = [
+  { code: "B2",  value: "B2 - Tsarfat Mendel H.",        leader: "Mendel H.", name: "Tsarfat",         flag: "fr",
+    children: ["Abergel Arié", "Balouka Shimon", "Fhima Simon", "Francel Meir Moshé", "Haddad Doron", "Krief Goel", "Levy Elie", "Maman Benjamin", "Maruani Mendi", "Saada Aaron", "Sebban David"] },
+  { code: "B3",  value: "B3 - Mexico Aaron",              leader: "Aaron",     name: "Mexico",          flag: "mx",
+    children: ["Allali Elicha", "Aouate Alon", "Benitah Meyron", "Bitan Tsion", "Brami Elisha", "Costa Elon", "Gozlan Liroy", "Haddad Noah", "Harros Levi Eliahou", "Soussan Doron", "Zerbib Betsalel"] },
+  { code: "B4",  value: "B4 - Argentina Mendel E.",       leader: "Mendel E.", name: "Argentina",       flag: "ar",
+    children: ["Aseriel Mordehai", "Attiach Zeev", "Elhadad Betsalel", "Ghezaiel Meir", "Hayoun Oren", "Huet Ron", "Kadoche Ezra", "Naim Aaron", "Pevzner Schneur", "Sebban Joseph", "Szusterman Aaron", "Uzan Hillel"] },
+  { code: "B5",  value: "B5 - Brazil Roy",                leader: "Roy",       name: "Brazil",          flag: "br",
+    children: ["Abergel Doron Moche Isaac", "Amar Amiel", "Cohen Levi Itshak", "Gabison Ariel", "Halimi Jarod", "Khalifa Nehoraï", "Koskas Malone", "Maman Gabriel", "Maruani Levy", "Rebecca Lasry Baroukh", "Tastet Ethan", "Zarrouk Arié"] },
+  { code: "B6",  value: "B6 - Canada Mendel S.",          leader: "Mendel S.", name: "Canada",          flag: "ca",
+    children: ["Aseriel Gad", "Attali Raphaël", "Baruch Elie Tsvi", "Berrebi Aaron", "Boudjenah Eytan", "Cohen Lenny", "Elbaz Arié", "Galula Mendel", "Ladaev Yossef", "Touaty Noam Chalom", "Touboul Mendel", "Yaiche Eli Gabriel", "Yaiche Salomon Mordehai", "Zerdoun Menachem Mendel"] },
+  { code: "B7",  value: "B7 - Panama Chmouel",            leader: "Chmouel",   name: "Panama",          flag: "pa",
+    children: ["Albors Solal", "Amar Isaac", "Amsellem Benjamin", "Attal Elone", "Belaiche Auren", "Benhamou Yaïr", "Bismuth Shimon", "Deneufve Ezechiel", "Knoller Eyal", "Krief Levyn", "Marciano Moshe", "Sekroun Samuel"] },
+  { code: "B8",  value: "B8 - Australia Yaïr",            leader: "Yaïr",      name: "Australia",       flag: "au",
+    children: ["Abitbol Elie", "Ankri Mendel", "Atlan Aaron", "Elharar Gabriel", "Hagege Yossef-Haïm", "Hazan Meyron", "Nakache Aaron", "Pevzner Levi", "Sebban Elie Elyahou", "Sultan Lior", "Zeitoun Hillel", "Zerbib Elie"] },
+  { code: "B9",  value: "B9 - Vietnam Yaki",              leader: "Yaki",      name: "Vietnam",         flag: "vn",
+    children: ["Amar Raphaël", "Benhamou Nathan", "Bohbot Elie", "Cohen Chemaya", "Cohen Joshua", "Dukan Nathan", "Mergui Menahem Mendel", "Morali Mendel", "Slama Levi", "Touaty Asher Mendel", "Uzan Mendel"] },
+  { code: "B10", value: "B10 - Yapan Eliel",              leader: "Eliel",     name: "Yapan",           flag: "jp",
+    children: ["Azerrad Mendel", "Cohen Ezra", "Cohen Leib", "Cohen Tzvi Haim", "Habib Mayrone", "Haddouk Aaron", "Kassabi Aharon", "Ladaev Raphaël", "Sitruk Aaron", "Touitou Eliad", "Trabelsi Emmanuel", "Yedinak Jacob"] },
+  { code: "B11", value: "B11 - Sefarad Menahem",          leader: "Menahem",   name: "Sefarad",         flag: "es",
+    children: ["Abitbol Noam", "Bensimhon Touvia", "Cohen Elisha", "Cohen Gaddiel", "Kouhana Gabriel", "Levy Ethan", "Naccache Shmaïa", "Teboul Yonathan", "Zerbib Samuel"] },
+  { code: "B12", value: "B12 - Artsot Habérit Yossi",     leader: "Yossi",     name: "Artsot Habérit",  flag: "us",
+    children: ["Baruch David Haï", "Cohen Menahem Mendel", "Fargeon Yossef", "Guez Meyron", "Ichou Elie", "Maarek Yossef", "Maruani Inon", "Pevzner Moshe", "Sebbah Mendel"] }
+];
+
+const POINTS = [5, 10, 15, 20, 25, 30, 35, 40, 50];
+
+let state = { team: null, child: null, points: null };
+
+// --- build UI ---
+const gridTeams = document.getElementById("grid-teams");
+TEAMS.forEach(t => {
+  const el = document.createElement("div");
+  el.className = "btn-team";
+  el.style.backgroundImage = `url(https://flagcdn.com/w320/${t.flag}.png)`;
+  el.innerHTML = `<b>${t.code} — ${t.name}</b><small>${t.leader}</small>`;
+  el.onclick = () => {
+    state.team = t;
+    state.child = null;
+    document.querySelectorAll(".btn-team").forEach(e => e.classList.remove("selected"));
+    el.classList.add("selected");
+    buildEnfants(t);
+    document.getElementById("card-enfant").classList.remove("card-disabled");
+    document.getElementById("card-points").classList.add("card-disabled");
+    updateRecap();
+  };
+  gridTeams.appendChild(el);
+});
+
+const listEnfants = document.getElementById("list-enfants");
+function buildEnfants(team) {
+  listEnfants.innerHTML = "";
+  team.children.forEach(c => {
+    const el = document.createElement("div");
+    el.className = "chip-enfant";
+    el.textContent = c;
+    el.onclick = () => {
+      state.child = c;
+      listEnfants.querySelectorAll(".chip-enfant").forEach(e => e.classList.remove("selected"));
+      el.classList.add("selected");
+      document.getElementById("card-points").classList.remove("card-disabled");
+      updateRecap();
+    };
+    listEnfants.appendChild(el);
+  });
+}
+
+const listPoints = document.getElementById("list-points");
+POINTS.forEach(p => {
+  const el = document.createElement("div");
+  el.className = "btn-pts";
+  el.textContent = p;
+  el.onclick = () => {
+    state.points = p;
+    listPoints.querySelectorAll(".btn-pts").forEach(e => e.classList.remove("selected"));
+    el.classList.add("selected");
+    updateRecap();
+  };
+  listPoints.appendChild(el);
+});
+
+// default date = today
+const inputDate = document.getElementById("inputDate");
+inputDate.value = new Date().toISOString().slice(0, 10);
+
+function updateRecap() {
+  const recap = document.getElementById("recap");
+  const btn = document.getElementById("btnSubmit");
+  if (state.team && state.child && state.points) {
+    recap.innerHTML = `<b>${state.team.code} ${state.team.name}</b> — ${state.child} — <b>${state.points} pts</b>`;
+    btn.disabled = false;
+  } else if (state.team) {
+    recap.textContent = "Sélectionnez un enfant et des points.";
+    btn.disabled = true;
+  } else {
+    recap.textContent = "Sélectionnez une équipe, un enfant et des points.";
+    btn.disabled = true;
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+document.getElementById("btnSubmit").onclick = () => {
+  if (!state.team || !state.child || !state.points) return;
+
+  const [y, m, d] = inputDate.value.split("-");
+
+  const form = document.createElement("form");
+  form.action = FORM_ACTION;
+  form.method = "POST";
+  form.target = "hidden_iframe";
+
+  function addField(name, value) {
+    const inp = document.createElement("input");
+    inp.type = "hidden";
+    inp.name = name;
+    inp.value = value;
+    form.appendChild(inp);
+  }
+
+  addField(`entry.${ENTRY.date}_year`, y);
+  addField(`entry.${ENTRY.date}_month`, parseInt(m, 10));
+  addField(`entry.${ENTRY.date}_day`, parseInt(d, 10));
+  addField(`entry.${ENTRY.team}`, state.team.value);
+  addField(`entry.${ENTRY.child}`, state.child);
+  addField(`entry.${ENTRY.points}`, state.points);
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  document.getElementById("historique").style.display = "block";
+  const histList = document.getElementById("historique-list");
+  const li = document.createElement("li");
+  li.textContent = `${state.team.code} ${state.team.name} — ${state.child} — ${state.points} pts`;
+  histList.prepend(li);
+
+  showToast(`Envoyé : ${state.child} — ${state.points} pts`);
+
+  state = { team: null, child: null, points: null };
+  document.querySelectorAll(".btn-team, .chip-enfant, .btn-pts").forEach(e => e.classList.remove("selected"));
+  document.getElementById("card-enfant").classList.add("card-disabled");
+  document.getElementById("card-points").classList.add("card-disabled");
+  listEnfants.innerHTML = "";
+  updateRecap();
+};
+
+document.getElementById("btnReset").onclick = () => {
+  state = { team: null, child: null, points: null };
+  document.querySelectorAll(".btn-team, .chip-enfant, .btn-pts").forEach(e => e.classList.remove("selected"));
+  document.getElementById("card-enfant").classList.add("card-disabled");
+  document.getElementById("card-points").classList.add("card-disabled");
+  listEnfants.innerHTML = "";
+  updateRecap();
+};
+
+updateRecap();
+</script>
+
+</body>
+</html>
