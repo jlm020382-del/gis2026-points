@@ -132,31 +132,50 @@
 
   .list-enfants {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 8px;
+  }
+  @media (min-width: 480px) {
+    .list-enfants { grid-template-columns: repeat(2, 1fr); }
   }
   .chip-enfant {
     border: 2px solid #ddd;
     background: #fafafa;
     border-radius: 10px;
-    padding: 10px 8px;
+    padding: 8px 10px;
     min-height: 44px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+    flex-direction: column;
+    gap: 5px;
     cursor: pointer;
     font-size: 0.9em;
     line-height: 1.25;
     transition: transform 0.08s, background 0.15s, border-color 0.15s;
   }
-  .chip-enfant:active { transform: scale(0.96); }
+  .chip-enfant:active { transform: scale(0.97); }
+  .chip-enfant .enfant-name { font-weight: 600; }
   .chip-enfant.selected {
     border-color: var(--bleu);
     background: #eef4fa;
     color: var(--bleu);
-    font-weight: 600;
   }
+  .enfant-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.78em;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+  }
+  .enfant-badge.no-grade {
+    background: #d8d8d8;
+    color: #666;
+  }
+  .badge-icon { font-size: 1em; line-height: 1; letter-spacing: -1px; }
 
   .card-points {
     background: #fffdf8;
@@ -365,6 +384,27 @@ const TEAMS = [
 
 const POINTS = [5, 10, 15, 20, 25, 30, 35, 40, 50];
 
+const RANKS = [
+  { name: "Soldat",          threshold: 50,   color: "#33513f", icon: "🪖" },
+  { name: "Caporal",         threshold: 100,  color: "#33513f", icon: "∧" },
+  { name: "Sergent",         threshold: 170,  color: "#a3842f", icon: "∧∧" },
+  { name: "Adjudant",        threshold: 260,  color: "#1f5fa8", icon: "∧∧∧" },
+  { name: "Adjudant-Chef",   threshold: 370,  color: "#173f6e", icon: "∧∧∧∧" },
+  { name: "Lieutenant",      threshold: 500,  color: "#4d3d73", icon: "★" },
+  { name: "Capitaine",       threshold: 650,  color: "#4d3d73", icon: "★★" },
+  { name: "Commandant",      threshold: 820,  color: "#7c332c", icon: "★★★" },
+  { name: "Colonel",         threshold: 1000, color: "#7c332c", icon: "🦅" },
+  { name: "Général d'Armée", threshold: 1200, color: "#5c211d", icon: "🎖️" }
+];
+
+function getRank(points) {
+  let current = null;
+  for (const r of RANKS) {
+    if (points >= r.threshold) current = r;
+  }
+  return current;
+}
+
 let state = { team: null, child: null, points: null };
 
 // --- build UI ---
@@ -389,11 +429,31 @@ TEAMS.forEach(t => {
 
 const listEnfants = document.getElementById("list-enfants");
 function buildEnfants(team) {
+  const previousSelected = state.child;
   listEnfants.innerHTML = "";
   team.children.forEach(c => {
     const el = document.createElement("div");
     el.className = "chip-enfant";
-    el.textContent = c;
+    if (c === previousSelected) el.classList.add("selected");
+
+    const name = document.createElement("div");
+    name.className = "enfant-name";
+    name.textContent = c;
+    el.appendChild(name);
+
+    const pts = childScores[c] || 0;
+    const rank = getRank(pts);
+    const badge = document.createElement("div");
+    if (rank) {
+      badge.className = "enfant-badge";
+      badge.style.background = rank.color;
+      badge.innerHTML = `<span class="badge-icon">${rank.icon}</span><span>${rank.name} · ${pts} pts</span>`;
+    } else {
+      badge.className = "enfant-badge no-grade";
+      badge.textContent = `${pts} pt${pts > 1 ? "s" : ""}`;
+    }
+    el.appendChild(badge);
+
     el.onclick = () => {
       state.child = c;
       listEnfants.querySelectorAll(".chip-enfant").forEach(e => e.classList.remove("selected"));
@@ -404,6 +464,46 @@ function buildEnfants(team) {
     listEnfants.appendChild(el);
   });
 }
+
+// --- scores en direct par enfant depuis l'onglet recap du Google Sheet ---
+// TODO: remplacer par l'ID du spreadsheet et le nom de l'onglet une fois le Google Form créé
+const CHILD_SHEET_ID = "REPLACE_ME_SHEET_ID";
+const CHILD_TAB_NAME = "Récap Enfants";
+let childScores = {};
+let childScoreCallbackCount = 0;
+
+function loadChildScores() {
+  const cbName = "childScoresCallback_" + (childScoreCallbackCount++);
+  const script = document.createElement("script");
+
+  function finish() {
+    delete window[cbName];
+    script.remove();
+  }
+
+  window[cbName] = (resp) => {
+    try {
+      const rows = (resp && resp.table && resp.table.rows) || [];
+      childScores = {};
+      rows.forEach(r => {
+        const name = r.c && r.c[0] && r.c[0].v;
+        const val = r.c && r.c[1] && typeof r.c[1].v === "number" ? r.c[1].v : 0;
+        if (name) childScores[String(name).trim()] = val;
+      });
+      if (state.team) buildEnfants(state.team);
+    } catch (e) {}
+    finish();
+  };
+
+  const tq = encodeURIComponent("select A,B");
+  const sheet = encodeURIComponent(CHILD_TAB_NAME);
+  script.src = `https://docs.google.com/spreadsheets/d/${CHILD_SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${sheet}&tq=${tq}&_=${Date.now()}`;
+  script.onerror = finish;
+  document.body.appendChild(script);
+}
+
+loadChildScores();
+setInterval(loadChildScores, 60000);
 
 const listPoints = document.getElementById("list-points");
 POINTS.forEach(p => {
@@ -488,6 +588,8 @@ document.getElementById("btnSubmit").onclick = () => {
   document.getElementById("card-points").classList.add("card-disabled");
   listEnfants.innerHTML = "";
   updateRecap();
+  // laisse le temps à Google Sheets de recalculer les formules avant de rafraîchir les scores
+  setTimeout(loadChildScores, 4000);
 };
 
 document.getElementById("btnReset").onclick = () => {
