@@ -62,6 +62,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
   }
   section.card h2 .num {
     background: var(--bleu);
@@ -72,6 +73,28 @@
     align-items: center;
     justify-content: center;
     font-size: 0.75em;
+  }
+  .btn-refresh {
+    margin-left: auto;
+    background: #eef4fa;
+    color: var(--bleu);
+    border: 1.5px solid #cfe0ef;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 0.75em;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .btn-refresh:active { transform: scale(0.95); }
+  .refresh-icon { display: inline-block; }
+  .refresh-icon.spinning { animation: spin-icon 0.7s linear infinite; }
+  @keyframes spin-icon {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   input[type="date"] {
@@ -291,6 +314,7 @@
     .grid-teams, .pts-row { gap: 6px; }
     .btn-team { font-size: 0.8em; padding: 8px 4px; }
     .btn-pts { font-size: 0.92em; padding: 10px 2px; }
+    .btn-refresh .btn-refresh-label { display: none; }
   }
 </style>
 </head>
@@ -313,7 +337,10 @@
   </section>
 
   <section class="card">
-    <h2><span class="num">2</span> Équipe</h2>
+    <h2>
+      <span class="num">2</span> Équipe
+      <button id="btnRefreshScores" class="btn-refresh"><span class="refresh-icon">🔄</span> <span class="btn-refresh-label">Actualiser les scores</span></button>
+    </h2>
     <div class="grid-teams" id="grid-teams"></div>
   </section>
 
@@ -469,9 +496,18 @@ const RECAP_SHEET_ID = "11f5_60C-cyabbZCd1AAcr4uIVhChSXGXZmiLtFstVEc";
 const RECAP_TAB_NAME = "Récap Points";
 let scoreCallbackCount = 0;
 
-function loadTeamScores() {
+function loadTeamScores(manual) {
+  const refreshIcon = document.querySelector("#btnRefreshScores .refresh-icon");
+  if (refreshIcon) refreshIcon.classList.add("spinning");
+
   const cbName = "sheetScoresCallback_" + (scoreCallbackCount++);
   const script = document.createElement("script");
+
+  function finish() {
+    delete window[cbName];
+    script.remove();
+    if (refreshIcon) refreshIcon.classList.remove("spinning");
+  }
 
   window[cbName] = (resp) => {
     try {
@@ -483,22 +519,27 @@ function loadTeamScores() {
         const el = document.getElementById(`score-${t.code}`);
         if (el) el.textContent = val !== null ? `${val} pts` : "0 pt";
       });
+      if (manual) showToast("Scores actualisés ✅");
     } catch (e) {
-      // silencieux : en cas de souci, les badges gardent leur dernière valeur connue
+      if (manual) showToast("Impossible d'actualiser les scores");
     }
-    delete window[cbName];
-    script.remove();
+    finish();
   };
 
   const tq = encodeURIComponent("select A,M");
   const sheet = encodeURIComponent(RECAP_TAB_NAME);
   script.src = `https://docs.google.com/spreadsheets/d/${RECAP_SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${sheet}&tq=${tq}&_=${Date.now()}`;
-  script.onerror = () => { delete window[cbName]; script.remove(); };
+  script.onerror = () => {
+    if (manual) showToast("Impossible d'actualiser les scores");
+    finish();
+  };
   document.body.appendChild(script);
 }
 
 loadTeamScores();
 setInterval(loadTeamScores, 60000); // rafraîchit toutes les 60s
+
+document.getElementById("btnRefreshScores").onclick = () => loadTeamScores(true);
 
 function updateRecap() {
   const recap = document.getElementById("recap");
