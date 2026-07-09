@@ -115,6 +115,20 @@
     background: rgba(255,255,255,0.8);
   }
   .btn-team b, .btn-team small { position: relative; z-index: 1; }
+  .team-score {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    z-index: 2;
+    background: rgba(27,108,168,0.92);
+    color: white;
+    font-size: 0.68em;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 8px;
+    line-height: 1.4;
+  }
+  .btn-team.selected .team-score { background: var(--bleu); }
   .btn-team:active { transform: scale(0.95); }
   .btn-team b { display: block; font-size: 1.05em; }
   .btn-team small { color: #555; }
@@ -385,7 +399,7 @@ TEAMS.forEach(t => {
   const el = document.createElement("div");
   el.className = "btn-team";
   el.style.backgroundImage = `url(https://flagcdn.com/w320/${t.flag}.png)`;
-  el.innerHTML = `<b>${t.code} — ${t.name}</b><small>${t.leader}</small>`;
+  el.innerHTML = `<span class="team-score" id="score-${t.code}">…</span><b>${t.code} — ${t.name}</b><small>${t.leader}</small>`;
   el.onclick = () => {
     state.team = t;
     document.querySelectorAll(".btn-team").forEach(e => e.classList.remove("selected"));
@@ -449,6 +463,42 @@ BONUS.forEach(b => {
 // default date = today
 const inputDate = document.getElementById("inputDate");
 inputDate.value = new Date().toISOString().slice(0, 10);
+
+// --- scores en direct depuis l'onglet "Récap Points" du Google Sheet ---
+const RECAP_SHEET_ID = "11f5_60C-cyabbZCd1AAcr4uIVhChSXGXZmiLtFstVEc";
+const RECAP_TAB_NAME = "Récap Points";
+let scoreCallbackCount = 0;
+
+function loadTeamScores() {
+  const cbName = "sheetScoresCallback_" + (scoreCallbackCount++);
+  const script = document.createElement("script");
+
+  window[cbName] = (resp) => {
+    try {
+      const rows = (resp && resp.table && resp.table.rows) || [];
+      TEAMS.forEach(t => {
+        const match = rows.find(r => r.c && r.c[0] && r.c[0].v && String(r.c[0].v).indexOf(t.name) !== -1);
+        const cell = match && match.c[1];
+        const val = cell && typeof cell.v === "number" ? cell.v : null;
+        const el = document.getElementById(`score-${t.code}`);
+        if (el) el.textContent = val !== null ? `${val} pts` : "0 pt";
+      });
+    } catch (e) {
+      // silencieux : en cas de souci, les badges gardent leur dernière valeur connue
+    }
+    delete window[cbName];
+    script.remove();
+  };
+
+  const tq = encodeURIComponent("select A,M");
+  const sheet = encodeURIComponent(RECAP_TAB_NAME);
+  script.src = `https://docs.google.com/spreadsheets/d/${RECAP_SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${sheet}&tq=${tq}&_=${Date.now()}`;
+  script.onerror = () => { delete window[cbName]; script.remove(); };
+  document.body.appendChild(script);
+}
+
+loadTeamScores();
+setInterval(loadTeamScores, 60000); // rafraîchit toutes les 60s
 
 function updateRecap() {
   const recap = document.getElementById("recap");
@@ -526,6 +576,8 @@ document.getElementById("btnSubmit").onclick = () => {
         e.querySelector("input").checked = false;
       });
       updateRecap();
+      // laisse le temps à Google Sheets de recalculer les formules avant de rafraîchir les scores
+      setTimeout(loadTeamScores, 4000);
       return;
     }
     const [category, points] = entries[i];
