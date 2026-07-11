@@ -399,6 +399,7 @@
       <div class="classement-toggle">
         <button class="active" data-mode="general">Général</button>
         <button data-mode="team">Par équipe</button>
+        <button data-mode="grade">Par grade</button>
       </div>
     </h2>
     <div id="classement-content"></div>
@@ -621,7 +622,7 @@ function renderClassement() {
     TEAMS.forEach(t => t.children.forEach(c => all.push({ name: c, team: t, points: childScores[c] || 0 })));
     all.sort((a, b) => b.points - a.points);
     all.forEach((entry, i) => container.appendChild(buildClassementRow(i + 1, entry)));
-  } else {
+  } else if (classementMode === "team") {
     TEAMS.forEach(t => {
       const header = document.createElement("div");
       header.className = "classement-team-header";
@@ -632,6 +633,36 @@ function renderClassement() {
         .sort((a, b) => b.points - a.points);
       list.forEach((entry, i) => container.appendChild(buildClassementRow(i + 1, entry, true)));
     });
+  } else {
+    const groups = RANKS.slice().reverse().map(r => ({ rank: r, entries: [] }));
+    const unranked = [];
+    TEAMS.forEach(t => t.children.forEach(c => {
+      const points = childScores[c] || 0;
+      const entry = { name: c, team: t, points };
+      const rk = getRank(points);
+      if (rk) groups.find(g => g.rank.name === rk.name).entries.push(entry);
+      else unranked.push(entry);
+    }));
+
+    groups.forEach(g => {
+      if (g.entries.length === 0) return;
+      g.entries.sort((a, b) => b.points - a.points);
+      const header = document.createElement("div");
+      header.className = "classement-team-header";
+      header.style.color = g.rank.color;
+      header.innerHTML = `<span class="badge-icon">${g.rank.icon}</span> ${g.rank.name}`;
+      container.appendChild(header);
+      g.entries.forEach((entry, i) => container.appendChild(buildClassementRow(i + 1, entry)));
+    });
+
+    if (unranked.length) {
+      unranked.sort((a, b) => b.points - a.points);
+      const header = document.createElement("div");
+      header.className = "classement-team-header";
+      header.textContent = "Recrue (pas encore de grade)";
+      container.appendChild(header);
+      unranked.forEach((entry, i) => container.appendChild(buildClassementRow(i + 1, entry)));
+    }
   }
 }
 
