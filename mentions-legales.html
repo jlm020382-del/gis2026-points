@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mentions légales | LYM Edition</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --papier: #fcf9f0;
+    --ligne: #c7d9e6;
+    --marge: #c04a3f;
+    --marge-teinte: #fbeae7;
+    --encre: #1b3a5c;
+    --teal: #127d79;
+    --carte: #ffffff;
+    --gris: #6b6b6b;
+    --marge-largeur: 46px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
+    background: var(--papier);
+    color: var(--encre);
+    line-height: 1.65;
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 41px, var(--ligne) 41px, var(--ligne) 42px);
+    background-position: 0 120px;
+  }
+  .marge-verticale {
+    position: fixed; top: 0; bottom: 0; left: 0;
+    width: var(--marge-largeur);
+    background: linear-gradient(to right, var(--marge-teinte) 0%, var(--marge-teinte) calc(100% - 2px), var(--marge) calc(100% - 2px), var(--marge) 100%, transparent 100%);
+    opacity: 0.9;
+  }
+  @media (max-width: 760px) { .marge-verticale { display: none; } }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 60px 28px 60px calc(var(--marge-largeur) + 40px);
+  }
+  @media (max-width: 760px) { .wrap { padding: 40px 20px; } }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--marge);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 12px;
+  }
+  h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 2em; margin: 0 0 36px; }
+
+  section { margin-bottom: 32px; }
+  h2 {
+    font-size: 1em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--teal);
+    margin: 0 0 12px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  p { margin: 0 0 8px; color: var(--encre); }
+  p.gris { color: var(--gris); font-size: 0.92em; }
+  a { color: var(--teal); }
+
+  a.retour {
+    display: inline-block;
+    margin-top: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85em;
+    color: var(--teal);
+    text-decoration: none;
+  }
+  a.retour:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="marge-verticale"></div>
+
+<div class="wrap">
+  <span class="eyebrow">Informations légales</span>
+  <h1>Mentions légales</h1>
+
+  <section>
+    <h2>Éditeur du site</h2>
+    <p><b>LYM Édition</b></p>
+    <p>SIREN : 989 004 999 — SIRET : 989 004 999 00011</p>
+    <p>17 B rue Alexandre Dumas, 93230 Romainville, France</p>
+    <p>Téléphone : +33 6 15 89 80 71</p>
+    <p>Email : <a href="mailto:editionlym@gmail.com">editionlym@gmail.com</a></p>
+  </section>
+
+  <section>
+    <h2>Directeur de la publication</h2>
+    <p>LYM Édition</p>
+  </section>
+
+  <section>
+    <h2>Hébergement</h2>
+    <p>Ce site est hébergé par GitHub, Inc. (GitHub Pages)</p>
+    <p>88 Colin P. Kelly Jr Street, San Francisco, CA 94107, États-Unis</p>
+    <p><a href="https://pages.github.com" target="_blank" rel="noopener">pages.github.com</a></p>
+  </section>
+
+  <section>
+    <h2>Propriété intellectuelle</h2>
+    <p class="gris">L'ensemble des contenus présents sur ce site (textes, visuels, illustrations, logo) est la propriété de LYM Édition et ne peut être reproduit, distribué ou utilisé sans autorisation écrite préalable.</p>
+  </section>
+
+  <section>
+    <h2>Paiement et données personnelles</h2>
+    <p class="gris">Les paiements en ligne sont traités de façon sécurisée par Stripe. LYM Édition n'a accès à aucune donnée bancaire. Les informations transmises lors de la commande (nom, adresse, contact, nom et classe de l'enfant) sont utilisées uniquement pour le traitement et la remise de la commande.</p>
+  </section>
+
+  <a href="cahier-hebreu.html" class="retour">← Retour à la page du cahier</a>
+</div>
+
+</body>
+</html>
