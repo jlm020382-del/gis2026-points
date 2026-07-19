@@ -245,8 +245,22 @@
   .famille .lettres { font-family: 'Frank Ruhl Libre', serif; font-size: 1.7em; color: var(--encre); margin: 8px 0; direction: rtl; }
   .famille p { margin: 0; font-size: 0.86em; color: var(--gris); }
 
-  /* --- galerie: photos scotchées --- */
+  /* --- planche alphabet complet --- */
   .section-alt { background: #f7f0dd; }
+  .planche-alphabet {
+    max-width: 380px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .planche-alphabet .frame {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 18px 40px rgba(27,58,92,0.18);
+    transform: rotate(-1deg);
+  }
+  .planche-alphabet .legende-tracee { margin-top: 16px; }
+
+  /* --- galerie: photos scotchées --- */
   .grid-apercu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; padding-top: 10px; }
   @media (max-width: 800px) { .grid-apercu { grid-template-columns: 1fr; gap: 56px; max-width: 340px; margin: 0 auto; } }
   .polaroid {
@@ -407,6 +421,21 @@
 </section>
 
 <section class="section-alt">
+  <div class="wrap">
+    <div class="titre-section">
+      <span class="eyebrow">Référence</span>
+      <h2>Les 22 lettres, <span class="plume">d'un coup d'œil</span></h2>
+    </div>
+    <div class="planche-alphabet">
+      <div class="frame">
+        <img src="alphabet-complet.jpg" alt="Planche complète de l'alphabet hébraïque Alef Beth, en classique et en cursive" onerror="this.parentElement.outerHTML='<div class=&quot;ph&quot;>Planche alphabet<br>(alphabet-complet.jpg à ajouter)</div>'">
+      </div>
+      <p class="legende-tracee">les 22 lettres, classique et cursive côte à côte — incluses à la fin du cahier</p>
+    </div>
+  </div>
+</section>
+
+<section>
   <div class="wrap">
     <div class="titre-section">
       <span class="eyebrow">Aperçu</span>
