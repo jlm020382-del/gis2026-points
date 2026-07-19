@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Merci pour votre commande | LYM Edition</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playwrite+FR+Moderne:wght@100..400&family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --papier: #fcf9f0;
+    --ligne: #c7d9e6;
+    --marge: #c04a3f;
+    --marge-teinte: #fbeae7;
+    --encre: #1b3a5c;
+    --cursive: #c96a2e;
+    --teal: #127d79;
+    --carte: #ffffff;
+    --gris: #6b6b6b;
+    --marge-largeur: 46px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Source Sans 3', 'Segoe UI', Arial, sans-serif;
+    background: var(--papier);
+    color: var(--encre);
+    line-height: 1.6;
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 41px, var(--ligne) 41px, var(--ligne) 42px);
+    background-position: 0 120px;
+  }
+  .marge-verticale {
+    position: fixed; top: 0; bottom: 0; left: 0;
+    width: var(--marge-largeur);
+    background: linear-gradient(to right, var(--marge-teinte) 0%, var(--marge-teinte) calc(100% - 2px), var(--marge) calc(100% - 2px), var(--marge) 100%, transparent 100%);
+    opacity: 0.9;
+  }
+  @media (max-width: 760px) { .marge-verticale { display: none; } }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 70px 28px 60px calc(var(--marge-largeur) + 40px);
+  }
+  @media (max-width: 760px) { .wrap { padding: 50px 20px 40px; } }
+
+  .plume { font-family: 'Playwrite FR Moderne', cursive; }
+  .hebreu { font-family: 'Frank Ruhl Libre', serif; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--marge);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: 2.1em;
+    font-weight: 700;
+    margin: 0 0 8px;
+    line-height: 1.2;
+  }
+  h1 .plume { color: var(--cursive); font-weight: 400; font-size: 1.15em; }
+  p.sous-titre { font-size: 1.1em; color: var(--gris); margin: 0 0 36px; }
+
+  .carte {
+    background: var(--carte);
+    border-radius: 10px;
+    box-shadow: 0 14px 34px rgba(27,58,92,0.12);
+    padding: 28px 26px;
+    margin-bottom: 20px;
+  }
+  .carte h2 {
+    font-size: 1.05em;
+    margin: 0 0 14px;
+    color: var(--teal);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .carte ol {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .carte li { margin-bottom: 12px; }
+  .carte li:last-child { margin-bottom: 0; }
+  .carte li b { color: var(--encre); }
+
+  .rappel {
+    background: var(--marge-teinte);
+    border-left: 4px solid var(--marge);
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-size: 0.92em;
+  }
+  .rappel b { color: var(--marge); }
+
+  a.retour {
+    display: inline-block;
+    margin-top: 30px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85em;
+    color: var(--teal);
+    text-decoration: none;
+  }
+  a.retour:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="marge-verticale"></div>
+
+<div class="wrap">
+  <span class="eyebrow">✦ Commande confirmée</span>
+  <h1>Merci pour votre <span class="plume">commande</span> !</h1>
+  <p class="sous-titre">Votre paiement a bien été reçu.</p>
+
+  <div class="carte">
+    <h2>📧 Votre preuve d'achat</h2>
+    <p style="margin-top:0;">Un email de confirmation Stripe vient de vous être envoyé automatiquement, avec le détail de votre commande (produit, montant, date).</p>
+    <div class="rappel">
+      <b>Conservez cet email</b> — c'est votre preuve d'achat officielle.
+    </div>
+  </div>
+
+  <div class="carte">
+    <h2>🏫 Pour récupérer le cahier à l'école</h2>
+    <ol>
+      <li>Présentez l'email de confirmation Stripe (sur votre téléphone ou imprimé).</li>
+      <li>Indiquez <b>le nom et la classe de l'enfant</b> pour lequel le cahier a été commandé.</li>
+      <li>Le cahier vous sera remis directement par l'école.</li>
+    </ol>
+  </div>
+
+  <a href="cahier-hebreu.html" class="retour">← Retour à la page du cahier</a>
+</div>
+
+</body>
+</html>
