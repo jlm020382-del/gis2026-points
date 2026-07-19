@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playwrite+FR+Moderne:wght@100..400&family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script async src="https://js.stripe.com/v3/buy-button.js"></script>
 <style>
   :root {
     --papier: #fcf9f0;
@@ -161,26 +162,6 @@
   .etiquette-prix .prix { font-family: 'Playwrite FR Moderne', cursive; font-size: 1.7em; color: var(--encre); line-height: 1; }
   .etiquette-prix .ttc { font-family: 'IBM Plex Mono', monospace; font-size: 0.7em; color: var(--gris); }
 
-  .btn-acheter {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--encre);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 16px 26px;
-    font-size: 1.05em;
-    font-weight: 600;
-    font-family: 'Source Sans 3', sans-serif;
-    cursor: pointer;
-    text-align: center;
-    text-decoration: none;
-    transition: background 0.15s, transform 0.1s;
-  }
-  .btn-acheter:hover { background: var(--cursive); }
-  .btn-acheter:active { transform: scale(0.98); }
-
   .confiance { display: flex; gap: 18px; margin-top: 18px; font-size: 0.8em; color: var(--gris); flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; }
 
   /* --- signature: fiche officielle de la lettre --- */
@@ -275,8 +256,7 @@
   .cta-finale .wrap { display: block; }
   .cta-finale h2 { color: white; font-size: 1.9em; }
   .cta-finale .hebreu { display: block; color: rgba(255,255,255,0.5); font-size: 1.1em; margin-bottom: 6px; }
-  .cta-finale .btn-acheter { background: var(--cursive); margin-top: 22px; }
-  .cta-finale .btn-acheter:hover { background: #e08144; }
+  .cta-finale .bloc-bouton { display: flex; justify-content: center; margin-top: 22px; }
   .cta-finale p.sous { opacity: 0.65; margin-top: 16px; font-size: 0.85em; font-family: 'IBM Plex Mono', monospace; }
 
   footer { background: #0f2b3f; color: rgba(255,255,255,0.75); padding: 28px 0; font-size: 0.82em; }
@@ -312,7 +292,10 @@
           <div class="prix">15 €</div>
           <div class="ttc">TTC · livraison France</div>
         </div>
-        <a href="#" class="btn-acheter" id="btnAcheter">Acheter maintenant →</a>
+        <stripe-buy-button
+          buy-button-id="buy_btn_1Tuv0SFg8L9Zsx9eyEjNRNq7"
+          publishable-key="pk_live_51S2xdzFg8L9Zsx9e40ArL59ytHwR5qulw9Mq3gpHm7fj92mD7khWJdfVsiH2OT8RMy2psjow5n3W6X1q5FG0v6HX00wptdRMc2"
+        ></stripe-buy-button>
       </div>
       <div class="confiance">
         <span>🔒 paiement sécurisé</span>
@@ -399,7 +382,12 @@
   <div class="wrap">
     <span class="hebreu">בהצלחה</span>
     <h2>Prêt(e) à tracer votre première lettre ?</h2>
-    <a href="#" class="btn-acheter" id="btnAcheterFinal">Acheter le cahier — 15 € →</a>
+    <div class="bloc-bouton">
+      <stripe-buy-button
+        buy-button-id="buy_btn_1Tuv0SFg8L9Zsx9eyEjNRNq7"
+        publishable-key="pk_live_51S2xdzFg8L9Zsx9e40ArL59ytHwR5qulw9Mq3gpHm7fj92mD7khWJdfVsiH2OT8RMy2psjow5n3W6X1q5FG0v6HX00wptdRMc2"
+      ></stripe-buy-button>
+    </div>
     <p class="sous">paiement sécurisé · livraison en France</p>
   </div>
 </section>
@@ -410,20 +398,6 @@
     <div class="mentions">© LYM Edition — Mentions légales à compléter</div>
   </div>
 </footer>
-
-<script>
-  const STRIPE_LINK = "https://buy.stripe.com/28EfZh8WSd2SetVfr75kk01";
-  function allerVersAchat(e) {
-    if (!STRIPE_LINK) {
-      e.preventDefault();
-      alert("Le lien de paiement sera bientôt disponible.");
-      return;
-    }
-    window.location.href = STRIPE_LINK;
-  }
-  document.getElementById("btnAcheter").addEventListener("click", allerVersAchat);
-  document.getElementById("btnAcheterFinal").addEventListener("click", allerVersAchat);
-</script>
 
 </body>
 </html>
